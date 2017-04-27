@@ -414,6 +414,8 @@ func (daemon *Daemon) findAndAttachNetwork(container *container.Container, idOrN
 func (daemon *Daemon) updateContainerNetworkSettings(container *container.Container, endpointsConfig map[string]*networktypes.EndpointSettings) {
 	var n libnetwork.Network
 
+  logrus.Infof("<DENNIS> daemon.NetworkSettings start: %d", time.Now().UnixNano())
+
 	mode := container.HostConfig.NetworkMode
 	if container.Config.NetworkDisabled || mode.IsContainer() {
 		return
@@ -470,6 +472,7 @@ func (daemon *Daemon) updateContainerNetworkSettings(container *container.Contai
 	}
 	// Make sure to internally store the per network endpoint config by network name
 	if _, ok := container.NetworkSettings.Networks[networkName]; ok {
+    logrus.Infof("<DENNIS> daemon.NetworkSettings end: %d", time.Now().UnixNano())
 		return
 	}
 

@@ -97,6 +97,8 @@ func (daemon *Daemon) Start(container *container.Container) error {
 // between containers. The container is left waiting for a signal to
 // begin running.
 func (daemon *Daemon) containerStart(container *container.Container, checkpoint string, checkpointDir string, resetRestartManager bool) (err error) {
+  logrus.Info("<DENNIS> Start.containerStart: %d", time.Now().UnixNano())
+
 	start := time.Now()
 	container.Lock()
 	defer container.Unlock()
@@ -134,9 +136,11 @@ func (daemon *Daemon) containerStart(container *container.Container, checkpoint 
 		}
 	}()
 
+  logrus.Infof("<DENNIS> start.containerStart conditionalMount start: %d", time.Now().UnixNano())
 	if err := daemon.conditionalMountOnStart(container); err != nil {
 		return err
 	}
+  logrus.Infof("<DENNIS> start.containerStart conditionalMount end: %d", time.Now().UnixNano())
 
 	// Make sure NetworkMode has an acceptable value. We do this to ensure
 	// backwards API compatibility.
@@ -194,6 +198,8 @@ func (daemon *Daemon) containerStart(container *container.Container, checkpoint 
 	}
 
 	containerActions.WithValues("start").UpdateSince(start)
+
+  logrus.Infof("<DENNIS> start.containerStart end: %d", time.Now().UnixNano())
 
 	return nil
 }

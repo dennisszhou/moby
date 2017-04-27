@@ -220,6 +220,7 @@ func (a *Driver) Create(id, parent string, opts *graphdriver.CreateOpts) error {
 	if err := a.createDirsFor(id); err != nil {
 		return err
 	}
+
 	// Write the layers metadata
 	f, err := os.Create(path.Join(a.rootPath(), "layers", id))
 	if err != nil {
@@ -377,6 +378,7 @@ func (a *Driver) Remove(id string) error {
 // Get returns the rootfs path for the id.
 // This will mount the dir at its given path
 func (a *Driver) Get(id, mountLabel string) (string, error) {
+  logrus.Infof("<DENNIS> aufs.Get start: %s, %s, %d", id, mountLabel, time.Now().UnixNano())
 	parents, err := a.getParentLayerPaths(id)
 	if err != nil && !os.IsNotExist(err) {
 		return "", err
@@ -396,6 +398,7 @@ func (a *Driver) Get(id, mountLabel string) (string, error) {
 		return m, nil
 	}
 
+  logrus.Infof("<DENNIS> aufs.Get mount start: %d", time.Now().UnixNano())
 	// If a dir does not have a parent ( no layers )do not try to mount
 	// just return the diff path to the data
 	if len(parents) > 0 {
@@ -403,15 +406,20 @@ func (a *Driver) Get(id, mountLabel string) (string, error) {
 			return "", err
 		}
 	}
+  logrus.Infof("<DENNIS> aufs.Get mount end: %d", time.Now().UnixNano())
 
 	a.pathCacheLock.Lock()
 	a.pathCache[id] = m
 	a.pathCacheLock.Unlock()
+
+  logrus.Infof("<DENNIS> aufs.Get end: %d", time.Now().UnixNano())
+
 	return m, nil
 }
 
 // Put unmounts and updates list of active mounts.
 func (a *Driver) Put(id string) error {
+  logrus.Infof("<DENNIS> aufs.Put start: %s, %d", id, time.Now().UnixNano())
 	a.pathCacheLock.Lock()
 	m, exists := a.pathCache[id]
 	if !exists {
@@ -423,10 +431,13 @@ func (a *Driver) Put(id string) error {
 		return nil
 	}
 
+  logrus.Infof("<DENNIS> aufs.Put unmount start: %d", time.Now().UnixNano())
 	err := a.unmount(m)
+  logrus.Infof("<DENNIS> aufs.Put unmount end: %d", time.Now().UnixNano())
 	if err != nil {
 		logrus.Debugf("Failed to unmount %s aufs: %v", id, err)
 	}
+  logrus.Infof("<DENNIS> aufs.Put end: %d", time.Now().UnixNano())
 	return err
 }
 

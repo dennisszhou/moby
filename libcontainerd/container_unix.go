@@ -91,6 +91,7 @@ func (ctr *container) spec() (*specs.Spec, error) {
 }
 
 func (ctr *container) start(checkpoint string, checkpointDir string, attachStdio StdioCallback) (err error) {
+  logrus.Infof("<DENNIS> lcd.start start: %d", time.Now().UnixNano())
 	spec, err := ctr.spec()
 	if err != nil {
 		return nil
@@ -159,19 +160,25 @@ func (ctr *container) start(checkpoint string, checkpointDir string, attachStdio
 		return err
 	}
 
+  logrus.Infof("<DENNIS> lcd.start.CreateContainer start: %d", time.Now().UnixNano())
 	resp, err := ctr.client.remote.apiClient.CreateContainer(context.Background(), r)
 	if err != nil {
 		ctr.closeFifos(iopipe)
 		return err
 	}
+  logrus.Infof("<DENNIS> lcd.start.CreateContainer end: %d", time.Now().UnixNano())
+
 	ctr.systemPid = systemPid(resp.Container)
 	close(ready)
 
-	return ctr.client.backend.StateChanged(ctr.containerID, StateInfo{
+  retVal := ctr.client.backend.StateChanged(ctr.containerID, StateInfo{
 		CommonStateInfo: CommonStateInfo{
 			State: StateStart,
 			Pid:   ctr.systemPid,
 		}})
+
+  logrus.Infof("<DENNIS> lcd.start end: %d", time.Now().UnixNano())
+  return retVal
 }
 
 func (ctr *container) newProcess(friendlyName string) *process {

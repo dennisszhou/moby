@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+  "time"
 
 	"github.com/Sirupsen/logrus"
 	containertypes "github.com/docker/docker/api/types/container"
@@ -17,6 +18,7 @@ import (
 
 // createContainerPlatformSpecificSettings performs platform specific container create functionality
 func (daemon *Daemon) createContainerPlatformSpecificSettings(container *container.Container, config *containertypes.Config, hostConfig *containertypes.HostConfig) error {
+  logrus.Infof("<DENNIS> daemon.PlatformSettings start: %d", time.Now().UnixNano())
 	if err := daemon.Mount(container); err != nil {
 		return err
 	}
@@ -57,7 +59,11 @@ func (daemon *Daemon) createContainerPlatformSpecificSettings(container *contain
 
 		container.AddMountPointWithVolume(destination, v, true)
 	}
-	return daemon.populateVolumes(container)
+  retVal := daemon.populateVolumes(container)
+
+  logrus.Infof("<DENNIS> daemon.PlatformSettings end: %d", time.Now().UnixNano())
+
+  return retVal
 }
 
 // populateVolumes copies data from the container's rootfs into the volume for non-binds.

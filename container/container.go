@@ -147,6 +147,9 @@ func (container *Container) FromDisk() error {
 
 // ToDisk saves the container configuration on disk.
 func (container *Container) ToDisk() error {
+  // startTime := time.Now().UnixNano()
+  logrus.Infof("<DENNIS> Container.ToDisk start: %d", time.Now().UnixNano())
+
 	pth, err := container.ConfigPath()
 	if err != nil {
 		return err
@@ -165,7 +168,11 @@ func (container *Container) ToDisk() error {
 		return err
 	}
 
-	return container.WriteHostConfig()
+  retVal := container.WriteHostConfig()
+
+  logrus.Infof("<DENNIS> Container.ToDisk end: %d", time.Now().UnixNano())
+
+  return retVal
 }
 
 // ToDiskLocking saves the container configuration on disk in a thread safe way.

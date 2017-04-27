@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
+  "github.com/Sirupsen/logrus"
+
 	"github.com/docker/docker/api/errors"
 	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/strslice"
@@ -108,6 +110,9 @@ func (daemon *Daemon) newContainer(name string, config *containertypes.Config, h
 		err            error
 		noExplicitName = name == ""
 	)
+
+  logrus.Infof("<DENNIS> daemon.newContainer start: %d", time.Now().UnixNano())
+
 	id, name, err = daemon.generateIDAndName(name)
 	if err != nil {
 		return nil, err
@@ -126,6 +131,7 @@ func (daemon *Daemon) newContainer(name string, config *containertypes.Config, h
 	entrypoint, args := daemon.getEntrypointAndArgs(config.Entrypoint, config.Cmd)
 
 	base := daemon.newBaseContainer(id)
+
 	base.Created = time.Now().UTC()
 	base.Managed = managed
 	base.Path = entrypoint
@@ -136,6 +142,8 @@ func (daemon *Daemon) newContainer(name string, config *containertypes.Config, h
 	base.NetworkSettings = &network.Settings{IsAnonymousEndpoint: noExplicitName}
 	base.Name = name
 	base.Driver = daemon.GraphDriverName()
+
+  logrus.Infof("<DENNIS> daemon.newContainer end: %d", time.Now().UnixNano())
 
 	return base, err
 }

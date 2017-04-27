@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+  "time"
 
 	"github.com/Sirupsen/logrus"
 
@@ -467,6 +468,7 @@ func (d *Driver) Remove(id string) error {
 
 // Get creates and mounts the required file system for the given id and returns the mount path.
 func (d *Driver) Get(id string, mountLabel string) (s string, err error) {
+  logrus.Infof("<DENNIS> overlayfs2.get start: %d", time.Now().UnixNano())
 	dir := d.dir(id)
 	if _, err := os.Stat(dir); err != nil {
 		return "", err
@@ -533,9 +535,11 @@ func (d *Driver) Get(id string, mountLabel string) (s string, err error) {
 		mountTarget = path.Join(id, "merged")
 	}
 
+  logrus.Infof("<DENNIS> overlayfs2.get mount start: %d", time.Now().UnixNano())
 	if err := mount("overlay", mountTarget, "overlay", 0, mountData); err != nil {
 		return "", fmt.Errorf("error creating overlay mount to %s: %v", mergedDir, err)
 	}
+  logrus.Infof("<DENNIS> overlayfs2.get mount end: %d", time.Now().UnixNano())
 
 	// chown "workdir/work" to the remapped root UID/GID. Overlay fs inside a
 	// user namespace requires this to move a directory from lower to upper.
@@ -548,11 +552,13 @@ func (d *Driver) Get(id string, mountLabel string) (s string, err error) {
 		return "", err
 	}
 
+  logrus.Infof("<DENNIS> overlayfs2.get end: %d", time.Now().UnixNano())
 	return mergedDir, nil
 }
 
 // Put unmounts the mount path created for the give id.
 func (d *Driver) Put(id string) error {
+  logrus.Infof("<DENNIS> overlayfs2.put start: %d", time.Now().UnixNano())
 	dir := d.dir(id)
 	_, err := ioutil.ReadFile(path.Join(dir, lowerFile))
 	if err != nil {
@@ -570,6 +576,7 @@ func (d *Driver) Put(id string) error {
 	if err := syscall.Unmount(mountpoint, 0); err != nil {
 		logrus.Debugf("Failed to unmount %s overlay: %s - %v", id, mountpoint, err)
 	}
+  logrus.Infof("<DENNIS> overlayfs2.put end: %d", time.Now().UnixNano())
 	return nil
 }
 

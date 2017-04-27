@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"sync"
+  "time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/distribution"
@@ -446,6 +447,7 @@ func (ls *layerStore) Release(l Layer) ([]Metadata, error) {
 }
 
 func (ls *layerStore) CreateRWLayer(name string, parent ChainID, mountLabel string, initFunc MountInit, storageOpt map[string]string) (RWLayer, error) {
+  logrus.Infof("<DENNIS> layer_store.crwl start: %d", time.Now().UnixNano())
 	ls.mountL.Lock()
 	defer ls.mountL.Unlock()
 	m, ok := ls.mounts[name]
@@ -482,7 +484,9 @@ func (ls *layerStore) CreateRWLayer(name string, parent ChainID, mountLabel stri
 	}
 
 	if initFunc != nil {
+    logrus.Infof("<DENNIS> layer_store.crwl.initMount start: %d", time.Now().UnixNano())
 		pid, err = ls.initMount(m.mountID, pid, mountLabel, initFunc, storageOpt)
+    logrus.Infof("<DENNIS> layer_store.crwl.initMount end: %d", time.Now().UnixNano())
 		if err != nil {
 			return nil, err
 		}
@@ -493,15 +497,22 @@ func (ls *layerStore) CreateRWLayer(name string, parent ChainID, mountLabel stri
 		StorageOpt: storageOpt,
 	}
 
+
+  logrus.Infof("<DENNIS> layer_store.crwl.CreateReadWrite start: %d", time.Now().UnixNano())
 	if err = ls.driver.CreateReadWrite(m.mountID, pid, createOpts); err != nil {
 		return nil, err
 	}
+  logrus.Infof("<DENNIS> layer_store.crwl.CreateReadWrite end: %d", time.Now().UnixNano())
 
+  logrus.Infof("<DENNIS> layer_store.crwl.saveMount start: %d", time.Now().UnixNano())
 	if err = ls.saveMount(m); err != nil {
 		return nil, err
 	}
+  logrus.Infof("<DENNIS> layer_store.crwl.saveMount end: %d", time.Now().UnixNano())
 
+  logrus.Infof("<DENNIS> layer_store.crwl end: %d", time.Now().UnixNano())
 	return m.getReference(), nil
+
 }
 
 func (ls *layerStore) GetRWLayer(id string) (RWLayer, error) {
@@ -601,6 +612,7 @@ func (ls *layerStore) initMount(graphID, parent, mountLabel string, initFunc Mou
 	// which are expecting this layer with this special name. If all
 	// graph drivers can be updated to not rely on knowing about this layer
 	// then the initID should be randomly generated.
+  logrus.Infof("<DENNIS> layer_store.initMount start: %d", time.Now().UnixNano())
 	initID := fmt.Sprintf("%s-init", graphID)
 
 	createOpts := &graphdriver.CreateOpts{
@@ -611,19 +623,24 @@ func (ls *layerStore) initMount(graphID, parent, mountLabel string, initFunc Mou
 	if err := ls.driver.CreateReadWrite(initID, parent, createOpts); err != nil {
 		return "", err
 	}
+
 	p, err := ls.driver.Get(initID, "")
 	if err != nil {
 		return "", err
 	}
 
+  logrus.Infof("<DENNIS> layer_store.initMount.initFunc start: %d", time.Now().UnixNano())
 	if err := initFunc(p); err != nil {
 		ls.driver.Put(initID)
 		return "", err
 	}
+  logrus.Infof("<DENNIS> layer_store.initMount.initFunc end: %d", time.Now().UnixNano())
 
 	if err := ls.driver.Put(initID); err != nil {
 		return "", err
 	}
+
+  logrus.Infof("<DENNIS> layer_store.initMount end: %d", time.Now().UnixNano())
 
 	return initID, nil
 }

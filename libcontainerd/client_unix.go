@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+  "time"
 
 	"github.com/Sirupsen/logrus"
 	containerd "github.com/docker/containerd/api/grpc/types"
@@ -43,6 +44,7 @@ func (clnt *client) prepareBundleDir(uid, gid int) (string, error) {
 }
 
 func (clnt *client) Create(containerID string, checkpoint string, checkpointDir string, spec specs.Spec, attachStdio StdioCallback, options ...CreateOption) (err error) {
+  logrus.Infof("<DENNIS> libcontainerd.Create start: %d", time.Now().UnixNano())
 	clnt.lock(containerID)
 	defer clnt.unlock(containerID)
 
@@ -59,10 +61,12 @@ func (clnt *client) Create(containerID string, checkpoint string, checkpointDir 
 		return err
 	}
 
+  logrus.Infof("<DENNIS> libcontainerd.Create newContainer start: %d", time.Now().UnixNano())
 	container := clnt.newContainer(filepath.Join(dir, containerID), options...)
 	if err := container.clean(); err != nil {
 		return err
 	}
+  logrus.Infof("<DENNIS> libcontainerd.Create newContainer end: %d", time.Now().UnixNano())
 
 	defer func() {
 		if err != nil {
@@ -84,7 +88,11 @@ func (clnt *client) Create(containerID string, checkpoint string, checkpointDir 
 		return err
 	}
 
-	return container.start(checkpoint, checkpointDir, attachStdio)
+  retVal := container.start(checkpoint, checkpointDir, attachStdio)
+
+  logrus.Infof("<DENNIS> libcontainerd.Create end: %d", time.Now().UnixNano())
+
+  return retVal
 }
 
 func (clnt *client) Signal(containerID string, sig int) error {

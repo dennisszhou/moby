@@ -76,8 +76,12 @@ func (daemon *Daemon) create(params types.ContainerCreateConfig, managed bool) (
 		err       error
 	)
 
+  logrus.Infof("<DENNIS> daemon.create image: %s", params.Config.Image)
+  logrus.Infof("<DENNIS> daemon.create start: %s", time.Now().UnixNano())
+
 	if params.Config.Image != "" {
 		img, err = daemon.GetImage(params.Config.Image)
+    logrus.Infof("<DENNIS> daemon.create getimage: %d", time.Now().UnixNano())
 		if err != nil {
 			return nil, err
 		}
@@ -155,6 +159,9 @@ func (daemon *Daemon) create(params types.ContainerCreateConfig, managed bool) (
 		return nil, err
 	}
 	daemon.LogContainerEvent(container, "create")
+
+  logrus.Infof("<DENNIS> daemon.create end: %d", time.Now().UnixNano())
+
 	return container, nil
 }
 
@@ -201,6 +208,7 @@ func (daemon *Daemon) generateSecurityOpt(ipcMode containertypes.IpcMode, pidMod
 }
 
 func (daemon *Daemon) setRWLayer(container *container.Container) error {
+  logrus.Infof("<DENNIS> daemon.setRWLayer start: %d", time.Now().UnixNano())
 	var layerID layer.ChainID
 	if container.ImageID != "" {
 		img, err := daemon.imageStore.Get(container.ImageID)
@@ -217,6 +225,7 @@ func (daemon *Daemon) setRWLayer(container *container.Container) error {
 	}
 	container.RWLayer = rwLayer
 
+  logrus.Infof("<DENNIS> daemon.setRWLayer end: %d", time.Now().UnixNano())
 	return nil
 }
 
